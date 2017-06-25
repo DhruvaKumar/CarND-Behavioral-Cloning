@@ -39,7 +39,7 @@ def preprocess_img(img):
 # train_samples, validation_samples = train_test_split(samples, test_size=0)
 train_samples = samples
 
-samples generator(samples, batch_size=32):
+def generator(samples, batch_size=32):
 	num_samples = len(samples)
 	while 1:
 		samples = shuffle(samples)
@@ -72,25 +72,37 @@ print('batch_size=',batch_size)
 from keras.models import Sequential, Model
 from keras.layers.core import Dense, Flatten, Lambda, Activation, Dropout
 from keras.layers.convolutional import Convolution2D, MaxPooling2D
-from keras.layers import Cropping2D
+from keras.layers import Cropping2D, ELU
+from keras.regularizers import l2, activity_l2
 
 start = time.time()
 
 # build and train a regression model (LeNet)
 model = Sequential()
+
 # crop off top and bottom portion of image which do not contain the road
 model.add(Cropping2D(cropping=((50,20), (0,0)), input_shape=(160,320,3)))
 # normalize and mean center images
 model.add(Lambda(lambda x: x / 255.0 - 0.5))
-model.add(Convolution2D(32, 5, 5, activation='relu'))
+model.add(Convolution2D(32, 5, 5))
+model.add(ELU())
 model.add(MaxPooling2D(pool_size=(2, 2)))
 model.add(Dropout(0.5))
-model.add(Convolution2D(64, 5, 5, activation='relu'))
+model.add(Convolution2D(64, 5, 5))
+model.add(ELU())
 model.add(MaxPooling2D(pool_size=(2, 2)))
+model.add(Dropout(0.5))
+model.add(Convolution2D(128, 3, 3))
+model.add(ELU())
+model.add(MaxPooling2D(pool_size=(2,2)))
 model.add(Dropout(0.5))
 model.add(Flatten())
 model.add(Dense(512))
+model.add(ELU())
 model.add(Dense(64))
+model.add(ELU())
+model.add(Dense(16))
+model.add(ELU())
 model.add(Dense(1))
 
 model.compile(loss='mse', optimizer='adam')											
