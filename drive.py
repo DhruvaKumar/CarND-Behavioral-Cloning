@@ -74,7 +74,9 @@ def telemetry(sid, data):
         image_array = preprocess_img(image_array)
         steering_angle = float(model.predict(image_array[None, :, :, :], batch_size=1))
 
-        throttle = controller.update(float(speed))
+        # throttle = controller.update(float(speed))
+        # setting a constant throttle
+        throttle = 0.5
 
         print(steering_angle, throttle)
         send_control(steering_angle, throttle)

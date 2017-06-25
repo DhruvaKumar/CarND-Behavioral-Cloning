@@ -11,22 +11,20 @@ import pickle
 import matplotlib.pyplot as plt
 plt.switch_backend('agg')
 
-# parse csv file to read in images and steering angles
-# csv format: center,left,right,steering,throttle,brake,speed
 
 print('Loading data...')
 
-# read in image paths from csv file
+# parse csv file to read in images and steering angles
+# csv format: center,left,right,steering,throttle,brake,speed
 samples = []
 with open('data/driving_log.csv') as csvfile:
 	reader = csv.reader(csvfile)
 	for line in reader:
-		samples.append(line)
-		# TODO: load in other images too
-
+		samples.append(('data/'+line[0], float(line[3]))) # center image
+		samples.append(('data/'+line[1].strip(), float(line[3])+0.25)) # left image
+		samples.append(('data/'+line[2].strip(), float(line[3])-0.25)) # right image
 
 def preprocess_img(img):
-	# TODO: crop
 
 	# change to YUV space as suggested in the Nvidia paper
 	img = cv2.cvtColor(img, cv2.COLOR_BGR2YUV)
@@ -48,12 +46,11 @@ def generator(samples, batch_size=32):
 			images = []
 			angles = []
 			for batch_sample in batch_samples:
-				img_filename = 'data/' + batch_sample[0]
-				image = cv2.imread(img_filename)
+				image = cv2.imread(batch_sample[0])
 				image = preprocess_img(image)
 
 				images.append(image)
-				angles.append(float(batch_sample[3]))
+				angles.append(batch_sample[1])
 		
 			X = np.array(images)
 			y = np.array(angles)	
@@ -64,13 +61,12 @@ def generator(samples, batch_size=32):
 			images = []
 			angles = []
 			for batch_sample_inv in batch_samples_inv:
-				img_filename = 'data/' + batch_sample[0]
-				image = cv2.imread(img_filename)
+				image = cv2.imread(batch_sample_inv[0])
 				image = cv2.flip(image, 1)
 				image = preprocess_img(image)
 
 				images.append(image)
-				angles.append(float(batch_sample[3])*-1)
+				angles.append(batch_sample[1]*-1)
 		
 			X = np.array(images)
 			y = np.array(angles)	
@@ -89,19 +85,25 @@ print('batch_size=',batch_size)
 from keras.models import Sequential, Model
 from keras.layers.core import Dense, Flatten, Lambda, Activation
 from keras.layers.convolutional import Convolution2D, MaxPooling2D
+from keras.layers import Cropping2D
 
 start = time.time()
 
 # build and train a regression model (LeNet)
 model = Sequential()
+# crop off top and bottom portion of image which do not contain the road
+model.add(Cropping2D(cropping=((50,20), (0,0)), input_shape=(160,320,3)))
 # normalize and mean center images
-model.add(Lambda(lambda x: x / 255.0 - 0.5, input_shape=(160,320,3)))
+model.add(Lambda(lambda x: x / 255.0 - 0.5))
 model.add(Convolution2D(6, 5, 5, activation='relu'))
 model.add(MaxPooling2D(pool_size=(2, 2)))
+model.add(Dropout(0.5))
 model.add(Convolution2D(6, 5, 5, activation='relu'))
 model.add(MaxPooling2D(pool_size=(2, 2)))
+model.add(Dropout(0.5))
 model.add(Flatten())
 model.add(Dense(120))
+model.add(Dropout(0.5))
 model.add(Dense(84))
 model.add(Dense(1))
 
