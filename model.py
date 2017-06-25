@@ -38,7 +38,7 @@ def preprocess_img(img):
 train_samples, validation_samples = train_test_split(samples, test_size=0.2)
 
 def generator(samples, batch_size=32):
-	num_samples = len(samples)*2 # we create another set of inverted images and steering angles
+	num_samples = len(samples)
 	while 1:
 		samples = shuffle(samples)
 		samples_inv = shuffle(samples) # inverted images and steering angles to reduce left turn bias
@@ -50,7 +50,7 @@ def generator(samples, batch_size=32):
 			for batch_sample in batch_samples:
 				img_filename = 'data/' + batch_sample[0]
 				image = cv2.imread(img_filename)
-				preprocess_img(image)
+				image = preprocess_img(image)
 
 				images.append(image)
 				angles.append(float(batch_sample[3]))
@@ -67,7 +67,7 @@ def generator(samples, batch_size=32):
 				img_filename = 'data/' + batch_sample[0]
 				image = cv2.imread(img_filename)
 				image = cv2.flip(image, 1)
-				preprocess_img(image)
+				image = preprocess_img(image)
 
 				images.append(image)
 				angles.append(float(batch_sample[3])*-1)
