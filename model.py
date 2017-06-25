@@ -66,7 +66,7 @@ def generator(samples, batch_size=32):
 			for batch_sample_inv in batch_samples_inv:
 				img_filename = 'data/' + batch_sample[0]
 				image = cv2.imread(img_filename)
-				image = cv2.flip(image)
+				image = cv2.flip(image, 1)
 				preprocess_img(image)
 
 				images.append(image)
