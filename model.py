@@ -22,24 +22,52 @@ with open('data/driving_log.csv') as csvfile:
 	reader = csv.reader(csvfile)
 	for line in reader:
 		samples.append(line)
+		# TODO: load in other images too
+
+
+def preprocess_img(img):
+	# TODO: crop
+
+	# change to YUV space as suggested in the Nvidia paper
+	img = cv2.cvtColor(img, cv2.COLOR_BGR2YUV)
+
+	return img
+
 
 # generate training and validation data
 train_samples, validation_samples = train_test_split(samples, test_size=0.2)
 
 def generator(samples, batch_size=32):
-	num_samples = len(samples)
+	num_samples = len(samples)*2 # we create another set of inverted images and steering angles
 	while 1:
 		samples = shuffle(samples)
+		samples_inv = shuffle(samples) # inverted images and steering angles to reduce left turn bias
 		for offset in range(0, num_samples, batch_size):
 			batch_samples = samples[offset:offset+batch_size]
 
 			images = []
 			angles = []
 			for batch_sample in batch_samples:
-				# TODO: load in other images too
-				# TODO: change from BGR to RGB
 				center_img_filename = 'data/' + batch_sample[0]
 				center_image = cv2.imread(center_img_filename)
+				preprocess_img(center_image)
+
+				images.append(center_image)
+				angles.append(float(batch_sample[3]))
+		
+			X = np.array(images)
+			y = np.array(angles)	
+			yield shuffle(X, y)
+
+			# inverted images and steering angles to reduce left turn bias
+			batch_samples_inv = samples_inv[offset:offset+batch_size]
+			images = []
+			angles = []
+			for batch_sample_inv in batch_samples_inv:
+				center_img_filename = 'data/' + batch_sample_inv[0]
+				center_image = cv2.imread(center_img_filename)
+				preprocess_img(center_image)
+
 				images.append(center_image)
 				angles.append(float(batch_sample[3]))
 		
@@ -53,8 +81,8 @@ validation_generator = generator(validation_samples, batch_size=batch_size)
 
 
 print('Training...')
-print('training data=',len(train_samples))
-print('validation data=',len(validation_samples))
+print('training data=',len(train_samples)*2)
+print('validation data=',len(validation_samples)*2)
 print('batch_size=',batch_size)
 
 from keras.models import Sequential, Model
@@ -77,12 +105,13 @@ model.add(Dense(84))
 model.add(Dense(1))
 
 model.compile(loss='mse', optimizer='adam')											
-model_history = model.fit_generator(train_generator, samples_per_epoch=len(train_samples), 
-	validation_data=validation_generator, nb_val_samples=len(validation_samples) nb_epoch=6, verbose=1)
+model_history = model.fit_generator(train_generator, samples_per_epoch=len(train_samples)*2, 
+	validation_data=validation_generator, nb_val_samples=len(validation_samples)*2, nb_epoch=7, verbose=1)
 model.save('model.h5')
 
 print('training completed in ', time.time() - start, 's')
-
+print('training loss',model_history.history['loss'])
+print('validation loss',model_history.history['val_loss'])
 
 # save model history to file
 pickle.dump(model_history.history, open("model_loss.p", "wb"))

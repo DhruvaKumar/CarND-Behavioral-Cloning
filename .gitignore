@@ -1,5 +1,7 @@
 data/
+models/
 linux_sim/
 instructions
+*.h5
 *.p
 *.png

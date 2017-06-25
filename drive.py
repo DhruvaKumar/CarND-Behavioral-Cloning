@@ -16,6 +16,8 @@ from keras.models import load_model
 import h5py
 from keras import __version__ as keras_version
 
+import cv2
+
 sio = socketio.Server()
 app = Flask(__name__)
 model = None
@@ -47,6 +49,13 @@ controller = SimplePIController(0.1, 0.002)
 set_speed = 9
 controller.set_desired(set_speed)
 
+def preprocess_img(img):
+    # TODO: crop
+    
+    # change to YUV space as suggested in the Nvidia paper
+    img = cv2.cvtColor(img, cv2.COLOR_RGB2YUV)
+
+    return img
 
 @sio.on('telemetry')
 def telemetry(sid, data):
@@ -61,6 +70,8 @@ def telemetry(sid, data):
         imgString = data["image"]
         image = Image.open(BytesIO(base64.b64decode(imgString)))
         image_array = np.asarray(image)
+
+        image_array = preprocess_img(image_array)
         steering_angle = float(model.predict(image_array[None, :, :, :], batch_size=1))
 
         throttle = controller.update(float(speed))
