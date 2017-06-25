@@ -48,11 +48,11 @@ def generator(samples, batch_size=32):
 			images = []
 			angles = []
 			for batch_sample in batch_samples:
-				center_img_filename = 'data/' + batch_sample[0]
-				center_image = cv2.imread(center_img_filename)
-				preprocess_img(center_image)
+				img_filename = 'data/' + batch_sample[0]
+				image = cv2.imread(img_filename)
+				preprocess_img(image)
 
-				images.append(center_image)
+				images.append(image)
 				angles.append(float(batch_sample[3]))
 		
 			X = np.array(images)
@@ -64,12 +64,13 @@ def generator(samples, batch_size=32):
 			images = []
 			angles = []
 			for batch_sample_inv in batch_samples_inv:
-				center_img_filename = 'data/' + batch_sample_inv[0]
-				center_image = cv2.imread(center_img_filename)
-				preprocess_img(center_image)
+				img_filename = 'data/' + batch_sample[0]
+				image = cv2.imread(img_filename)
+				image = cv2.flip(image)
+				preprocess_img(image)
 
-				images.append(center_image)
-				angles.append(float(batch_sample[3]))
+				images.append(image)
+				angles.append(float(batch_sample[3])*-1)
 		
 			X = np.array(images)
 			y = np.array(angles)	
