@@ -85,7 +85,7 @@ print('batch_size=',batch_size)
 from keras.models import Sequential, Model
 from keras.layers.core import Dense, Flatten, Lambda, Activation
 from keras.layers.convolutional import Convolution2D, MaxPooling2D
-from keras.layers import Cropping2D
+from keras.layers import Cropping2D, ELU
 
 start = time.time()
 
