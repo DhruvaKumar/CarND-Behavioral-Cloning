@@ -83,7 +83,7 @@ print('validation data=',len(validation_samples)*2)
 print('batch_size=',batch_size)
 
 from keras.models import Sequential, Model
-from keras.layers.core import Dense, Flatten, Lambda, Activation
+from keras.layers.core import Dense, Flatten, Lambda, Activation, Dropout
 from keras.layers.convolutional import Convolution2D, MaxPooling2D
 from keras.layers import Cropping2D
 
@@ -95,21 +95,20 @@ model = Sequential()
 model.add(Cropping2D(cropping=((50,20), (0,0)), input_shape=(160,320,3)))
 # normalize and mean center images
 model.add(Lambda(lambda x: x / 255.0 - 0.5))
-model.add(Convolution2D(6, 5, 5, activation='relu'))
+model.add(Convolution2D(32, 5, 5, activation='relu'))
 model.add(MaxPooling2D(pool_size=(2, 2)))
 model.add(Dropout(0.5))
-model.add(Convolution2D(6, 5, 5, activation='relu'))
+model.add(Convolution2D(64, 5, 5, activation='relu'))
 model.add(MaxPooling2D(pool_size=(2, 2)))
 model.add(Dropout(0.5))
 model.add(Flatten())
-model.add(Dense(120))
-model.add(Dropout(0.5))
-model.add(Dense(84))
+model.add(Dense(512))
+model.add(Dense(64))
 model.add(Dense(1))
 
 model.compile(loss='mse', optimizer='adam')											
 model_history = model.fit_generator(train_generator, samples_per_epoch=len(train_samples)*2, 
-	validation_data=validation_generator, nb_val_samples=len(validation_samples)*2, nb_epoch=4, verbose=1)
+	validation_data=validation_generator, nb_val_samples=len(validation_samples)*2, nb_epoch=5, verbose=1)
 model.save('model.h5')
 
 print('training completed in ', time.time() - start, 's')
