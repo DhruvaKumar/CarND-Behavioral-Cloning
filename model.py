@@ -83,7 +83,7 @@ print('validation data=',len(validation_samples)*2)
 print('batch_size=',batch_size)
 
 from keras.models import Sequential, Model
-from keras.layers.core import Dense, Flatten, Lambda, Activation
+from keras.layers.core import Dense, Flatten, Lambda, Activation, Dropout
 from keras.layers.convolutional import Convolution2D, MaxPooling2D
 from keras.layers import Cropping2D, ELU
 
@@ -108,11 +108,9 @@ model.add(ELU())
 model.add(MaxPooling2D(pool_size=(2,2)))
 model.add(Dropout(0.5))
 model.add(Flatten())
-model.add(Dense(512))
+model.add(Dense(100))
 model.add(ELU())
-model.add(Dense(64))
-model.add(ELU())
-model.add(Dense(16))
+model.add(Dense(50))
 model.add(ELU())
 model.add(Dense(1))
 
