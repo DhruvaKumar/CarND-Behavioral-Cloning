@@ -133,6 +133,7 @@ from keras.models import Sequential, Model
 from keras.layers.core import Dense, Flatten, Lambda, Activation, Dropout
 from keras.layers.convolutional import Convolution2D, MaxPooling2D
 from keras.layers import Cropping2D, ELU
+from keras.preprocessing.image import ImageDataGenerator
 
 start = time.time()
 
@@ -140,6 +141,7 @@ start = time.time()
 model = Sequential()
 # crop off top and bottom portion of image which do not contain the road
 model.add(Cropping2D(cropping=((50,20), (0,0)), input_shape=(160,320,3)))
+mode.add(ImageDataGenerator(target_size=(64,64)))
 # normalize and mean center images
 model.add(Lambda(lambda x: x / 255.0 - 0.5))
 model.add(Convolution2D(32, 5, 5))
@@ -163,7 +165,7 @@ model.add(Dense(1))
 
 model.compile(loss='mse', optimizer='adam')											
 model_history = model.fit_generator(train_generator, samples_per_epoch=20000, 
-	validation_data=validation_generator, nb_val_samples=5000, nb_epoch=4, verbose=1)
+	validation_data=validation_generator, nb_val_samples=5000, nb_epoch=3, verbose=1)
 model.save('model.h5')
 
 print('training completed in ', time.time() - start, 's')
