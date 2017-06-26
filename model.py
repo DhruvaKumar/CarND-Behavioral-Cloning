@@ -31,6 +31,11 @@ def preprocess_img(img):
 
 	return img
 
+def augment_img(img):
+	# TODO: choose left, center, right
+	# TODO: flipped
+	# TODO: brightness
+
 
 # generate training and validation data
 train_samples, validation_samples = train_test_split(samples, test_size=0.2)
