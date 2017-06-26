@@ -50,7 +50,11 @@ set_speed = 9
 controller.set_desired(set_speed)
 
 def preprocess_img(img):
-    # TODO: crop
+    # crop
+    img = img[50:140, :, :]
+
+    # resize
+    img = cv2.resize(img, (64,64))
     
     # change to YUV space as suggested in the Nvidia paper
     img = cv2.cvtColor(img, cv2.COLOR_RGB2YUV)
@@ -76,7 +80,7 @@ def telemetry(sid, data):
 
         # throttle = controller.update(float(speed))
         # setting a constant throttle
-        throttle = 0.5
+        throttle = 0.2
 
         print(steering_angle, throttle)
         send_control(steering_angle, throttle)

@@ -22,7 +22,58 @@ with open('data/driving_log.csv') as csvfile:
 	for line in reader:
 		data_lines.append(line)
 
+data_lines = np.array(data_lines)
+
+def preproc_data(data_lines):
+	data_lines = shuffle(data_lines)
+	num_bins = 25
+	angles = [float(data_line[3]) for data_line in data_lines]
+	avg_samples_per_bin = len(angles) // num_bins
+	hist, bin_edges = np.histogram(angles, bins=num_bins)
+
+	# cap at 700
+	cap = int(avg_samples_per_bin * 1.8)
+	data_lines_capped = np.array([], dtype=data_lines.dtype).reshape(0, data_lines.shape[1])
+	for idx, h in enumerate(list(hist)):
+		# mask of angles that fall in this bin
+		mask = (angles >= bin_edges[idx]) & (angles < bin_edges[idx+1])
+
+		# cap data_lines to 700 per bin
+		data_lines_capped = np.concatenate([data_lines_capped, data_lines[mask][:cap]])
+
+		# print('idx=',idx)
+		# print('mask ', mask.shape)
+		# print('adding data_lines', data_lines[mask][:cap].shape)
+		# print('data_lines_capped ', data_lines_capped.shape)
+
+	return shuffle(data_lines_capped)
+
+
+
+print('size before normalization', data_lines.shape)
+data_lines = preproc_data(data_lines)
+print('size after normalization', data_lines.shape)
+
+# angles = [float(data_line[3]) for data_line in data_lines]
+# hist, bin_edges = np.histogram(angles, bins=20)
+# print('hist', hist)
+# print('bin', bin_edges)
+
+# plt.hist(angles, bins=20)
+# plt.title('steering angles')
+# plt.savefig('hist_after.png')
+# plt.show()
+
+
+
+
 def preprocess_img(img):
+	# crop
+	img = img[50:140, :, :]
+
+	# resize
+	img = cv2.resize(img, (64,64))
+
 	# change to YUV space as suggested in the Nvidia paper
 	img = cv2.cvtColor(img, cv2.COLOR_BGR2YUV)
 	return img
@@ -49,7 +100,7 @@ def augment_img(data_line):
 		image = cv2.flip(image, 1) 
 		angle *= -1
 
-	# TODO: brightness
+	# TODO: brightness and contrast
 
 	return image, angle
 
@@ -58,10 +109,11 @@ def augment_img(data_line):
 train_samples, validation_samples = train_test_split(data_lines, test_size=0.2)
 
 def data_generator(data_lines, batch_size=32):
-	num_samples = len(data_lines)
+	# num_samples = len(data_lines)
+	idx = 0
+	idx_global = 0
 	angles_all = []
-	# i = 0
-	while 1:
+	while 1:	
 		images = []
 		angles = []
 		for i in range(batch_size):
@@ -69,10 +121,10 @@ def data_generator(data_lines, batch_size=32):
 
 			image, angle = augment_img(data_lines[random_index])
 
-			# choose abs(angles) < 0.08 with 35% probability
-			prob = np.random.random()
-			while(abs(angle) < 0.06 and prob < 0.30):
-				image, angle = augment_img(data_lines[random_index])
+			# # choose abs(angles) < 0.08 with 35% probability
+			# prob = np.random.random()
+			# while(abs(angle) < 0.06 and prob < 0.30):
+			# 	image, angle = augment_img(data_lines[random_index])
 
 			image = preprocess_img(image)
 
@@ -82,41 +134,39 @@ def data_generator(data_lines, batch_size=32):
 		X = np.array(images)
 		y = np.array(angles)
 
-		# # record all angles
-		# i = i+1
-		# angles_all.extend(angles)
-		# print('angles=',len(angles_all))
-		# if (i == 99):
-		# 	print('# of angles=', len(angles_all))
-		# 	hist, bin_edges = np.histogram(angles_all, bins=20)
-		# 	print('hist', hist)
-		# 	print('bin', bin_edges)
+		# record all angles
+		idx = idx + 1
+		angles_all.extend(angles)
+		# print('idx=',idx,' angles=',len(angles_all))
+		if (idx == (20000 // batch_size)-2):
+			print('# of angles=', len(angles_all))
+			hist, bin_edges = np.histogram(angles_all, bins=20)
+			print('hist', hist)
+			print('bin', bin_edges)
 
-		# 	plt.hist(angles_all, bins=20)
-		# 	plt.title('steering angles')
-		# 	plt.savefig('hist10.png')
-		# 	plt.show()
+			plt.hist(angles_all, bins=20)
+			plt.title('steering angles batch')
+			s = 'hist_batch'+str(idx_global)+'.png'
+			plt.savefig(s)
+			plt.show()
+			idx = 0
+			idx_global = idx_global + 1
 		yield shuffle(X, y)
 
 
-# gen = data_generator(train_samples, batch_size=32)
-# angles_all = np.array([])
-# for i in range(200):
-# 	print(i)
-# 	X,y = next(gen)
-# 	angles_all = np.concatenate([angles_all, y])
+# visualize training data for debugging
+def visualize_train_data(train_samples):
+	print('saving train data...')
 
-# print('# of angles=', len(angles_all))
-# hist, bin_edges = np.histogram(angles_all, bins=20)
-# print('hist', hist)
-# print('bin', bin_edges)
+	gen = data_generator(train_samples, batch_size=32)
+	X_batch,y_batch = next(gen)
+	for i in range(20):
+		# print(i)
+		X = cv2.cvtColor(X_batch[i], cv2.COLOR_YUV2BGR)
+		cv2.imwrite("train/train" + str(i) + "_" + str(y_batch[i]) + ".jpg", X)
+		# angles_all = np.concatenate([angles_all, y])
 
-# plt.hist(angles_all, bins=20)
-# plt.title('steering angles')
-# plt.savefig('hist12.png')
-# plt.show()
-
-
+visualize_train_data(train_samples)
 
 
 batch_size = 32
@@ -133,17 +183,15 @@ from keras.models import Sequential, Model
 from keras.layers.core import Dense, Flatten, Lambda, Activation, Dropout
 from keras.layers.convolutional import Convolution2D, MaxPooling2D
 from keras.layers import Cropping2D, ELU
-from keras.preprocessing.image import ImageDataGenerator
 
 start = time.time()
 
 # build and train a regression model (LeNet)
 model = Sequential()
 # crop off top and bottom portion of image which do not contain the road
-model.add(Cropping2D(cropping=((50,20), (0,0)), input_shape=(160,320,3)))
-mode.add(ImageDataGenerator(target_size=(64,64)))
+# model.add(Cropping2D(cropping=((50,20), (0,0)), ))
 # normalize and mean center images
-model.add(Lambda(lambda x: x / 255.0 - 0.5))
+model.add(Lambda(lambda x: x / 255.0 - 0.5, input_shape=(64,64,3)))
 model.add(Convolution2D(32, 5, 5))
 model.add(ELU())
 model.add(MaxPooling2D(pool_size=(2, 2)))
@@ -192,3 +240,4 @@ plt.show()
 
 # if __name__ == '__main__':
 # 	main()
+
