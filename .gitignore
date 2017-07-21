@@ -5,7 +5,5 @@ linux_sim/
 windows_sim/
 instructions
 tmp
-*.h5
 *.p
-*.png
 img.py

@@ -19,9 +19,6 @@ The goal of the project is to use end to end learning to autonomously drive a ca
 
 
 
----
-
-
 ### Description of files
 
 * `model.py` reads in the data (camera images + steering angles), preprocesses it and trains a model
@@ -73,7 +70,7 @@ This biased the model to only drive straight and not perform well on turns. I di
 
 ![alt text][image5]
 
-This helped the model recover better on turns.
+This helped the model recover well from sharp turns.
 
 ![alt text][image6]
 
