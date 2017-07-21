@@ -1,8 +1,10 @@
+.ipynb_checkpoints
 data/
 models/
 linux_sim/
 windows_sim/
 instructions
+tmp
 *.h5
 *.p
 *.png
