@@ -42,12 +42,12 @@ It's a feedforward network of 3 convolutional layers and 2 fully connected layer
 
 I used the dataset provided by Udacity. It captures good driving behavior well. That was enough for the car to successfully drive around the lap autonomously. 
 
-*Multiple camera images with angle offset*
+**Multiple camera images with angle offset**
 During training, images are recorded from the left, center and right dashboard camera. An angle offset of 0.25 degrees is applied to the left camera image and -0.25 degrees to the right camera image. By doing so, we not only feed in more data to the network, but simulate driving near the corners and recovery from it. For a left turn, the left camera image would correspond to a softer left turn and the right camera image would correspond to a harder left turn. 
 
 ![alt text][image2]
 
-*Flipping*
+**Flipping**
 Since the lap is anti-clockwise, we have data with mostly left turns. This would cause the model to have a bias towards predicting left turns. During the early stages of tweaking the model, the car would just drive around in a loop in place. One way to solve this would be to collect training data by driving in the opposite direction. I took the lazy route of flipping the images and steering angles to simulate driving clockwise. 
 
 ![alt text][image3]
