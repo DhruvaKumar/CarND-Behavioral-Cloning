@@ -1,6 +1,7 @@
 data/
 models/
 linux_sim/
+windows_sim/
 instructions
 *.h5
 *.p
