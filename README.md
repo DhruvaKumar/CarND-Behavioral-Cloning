@@ -5,7 +5,7 @@
 Overview
 ---
 
-The goal of the project is to use end to end learning to autonomously drive a car in a simulated environment. The input consists of images read from 3 dashboard cameras and the output is the steering angle. The [simulator](https://github.com/udacity/self-driving-car-sim) has two modes - training and autonomous driving. During training, we drive the car around the track and collect data (3 dashboard camera images, steering angle, throttle, brake). We use Keras to train and validate a convolutional neural network to predict the steering angle. In the autonomous mode, only the center camera image is fed into the network and the predicted steering angle is applied. This project was done as part of Udacity's self-driving nanodegree program.
+The goal of the project is to use end to end learning to autonomously drive a car in a simulated environment. The input consists of images read from 3 dashboard cameras and the output is the steering angle. The [simulator](https://github.com/udacity/self-driving-car-sim) has two modes - training and autonomous driving. During training, we drive the car around the track and collect data (3 dashboard camera images, steering angle, throttle, brake). We use Keras to train and validate a convolutional neural network to predict the steering angle. In the autonomous mode, only the center camera image is fed into the network and the predicted steering angle is actuated in the simulator. This project was done as part of [Udacity's self-driving nanodegree program](https://www.udacity.com/drive).
 
 
 [//]: # (Image References)
